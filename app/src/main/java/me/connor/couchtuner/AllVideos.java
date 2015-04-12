@@ -24,6 +24,7 @@ public class AllVideos extends Activity
 
 	private class MyPinnedSectionListAdapter extends BaseAdapter implements PinnedSectionListView.PinnedSectionListAdapter
 	{
+		//Comment
 		@Override
 		public boolean isItemViewTypePinned(int viewType)
 		{
