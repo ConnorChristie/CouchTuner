@@ -28,6 +28,10 @@
             android:name=".AllVideos"
             android:label="@string/title_activity_all_videos" >
         </activity>
+        <activity
+            android:name=".EpisodeList"
+            android:label="@string/title_activity_episode_list" >
+        </activity>
     </application>
 
 </manifest>

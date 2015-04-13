@@ -1,16 +1,22 @@
 package me.connor.couchtuner;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Filter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.jsoup.Jsoup;
@@ -19,23 +25,26 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import me.connor.couchtuner.listadapter.SeparatedListAdapter;
+import me.connor.couchtuner.listadapter.VideosAdapter;
+import me.connor.couchtuner.videoitems.HeaderItem;
+import me.connor.couchtuner.videoitems.Item;
+import me.connor.couchtuner.videoitems.VideoItem;
 
 public class AllVideos extends Activity
 {
-	private AllVideos instance;
-
-	// Adapter for ListView Contents
-	private SeparatedListAdapter adapter;
-
-	// ListView Contents
+	private VideosAdapter adapter;
 	private ListView listView;
+
+	private List<VideoItem> items = new ArrayList<>();
+	private List<Item> itemsSections = new ArrayList<>();
+
+	private Filter filter = new ArrayFilter();
+
+	private final Object mLock = new Object();
 
 	@Override
 	public void onCreate(Bundle args)
@@ -43,24 +52,46 @@ public class AllVideos extends Activity
 		super.onCreate(args);
 		setContentView(R.layout.activity_all_videos);
 
-		// Create the ListView Adapter
-		adapter = new SeparatedListAdapter(instance = this);
 		listView = (ListView) findViewById(R.id.allVideos);
 
 		new LoadVideosTask().execute();
 
-		// Listen for Click events
 		listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
 		{
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long duration)
 			{
-				Video item = (Video) adapter.getItem(position);
-				Toast.makeText(getApplicationContext(), item.getLink(), Toast.LENGTH_LONG).show();
+				VideoItem item = (VideoItem) adapter.getItem(position);
+				Intent videoInfoIntent = new Intent(AllVideos.this, EpisodeList.class);
+
+				videoInfoIntent.putExtra("videoTitle", item.getTitle());
+				videoInfoIntent.putExtra("videoLink", item.getLink());
+
+				startActivity(videoInfoIntent);
 			}
 		});
 
-		((EditText) findViewById(R.id.searchVideos)).addTextChangedListener(new TextWatcher()
+		EditText searchText = (EditText) findViewById(R.id.searchVideos);
+
+		searchText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
+			{
+				if (actionId == EditorInfo.IME_ACTION_SEARCH)
+				{
+					// hide virtual keyboard
+					InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+					imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), InputMethodManager.RESULT_UNCHANGED_SHOWN);
+
+					listView.requestFocus();
+
+					return true;
+				}
+
+				return false;
+			}
+		});
+
+		searchText.addTextChangedListener(new TextWatcher()
 		{
 			@Override
 			public void beforeTextChanged(CharSequence s, int start, int count, int after)
@@ -71,12 +102,7 @@ public class AllVideos extends Activity
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count)
 			{
-				for (String section : instance.adapter.sections.keySet())
-				{
-					instance.adapter.sections.get(section).getFilter().filter(s);
-				}
-
-				instance.adapter.notifyDataSetChanged();
+				filter.filter(s);
 			}
 
 			@Override
@@ -89,7 +115,9 @@ public class AllVideos extends Activity
 
 	protected class LoadVideosTask extends AsyncTask<Void, Void, SortedMap<String, SortedMap<String, String>>>
 	{
-		public LoadVideosTask() { }
+		public LoadVideosTask()
+		{
+		}
 
 		protected SortedMap<String, SortedMap<String, String>> doInBackground(Void... args)
 		{
@@ -113,9 +141,7 @@ public class AllVideos extends Activity
 							continue;
 						} else if (elem.nodeName().equals("ul"))
 						{
-							SortedMap<String, String> list = new TreeMap<>(
-
-							);
+							SortedMap<String, String> list = new TreeMap<>();
 
 							for (Element li : elem.select("li"))
 							{
@@ -138,18 +164,121 @@ public class AllVideos extends Activity
 		{
 			for (String section : result.keySet())
 			{
-				List<Video> videoList = new ArrayList<>();
 				SortedMap<String, String> videos = result.get(section);
 
 				for (String title : videos.keySet())
 				{
-					videoList.add(new Video(title, videos.get(title)));
+					items.add(new VideoItem(title, videos.get(title)));
 				}
-
-				adapter.addSection(section, new ArrayAdapter<>(instance, R.layout.list_item, R.id.list_item_title, videoList));
 			}
 
+			setVideosAdapter(items);
+		}
+	}
+
+	private void setVideosAdapter(List<VideoItem> items)
+	{
+		itemsSections.clear();
+
+		char prevChar = ' ';
+
+		for (VideoItem vi : items)
+		{
+			char firstChar = vi.getTitle().toCharArray()[0];
+
+			if (Character.isDigit(firstChar)) firstChar = '#';
+
+			if (firstChar != prevChar)
+			{
+				itemsSections.add(new HeaderItem(firstChar));
+
+				prevChar = firstChar;
+			}
+
+			itemsSections.add(vi);
+		}
+
+		if (adapter == null)
+		{
+			adapter = new VideosAdapter(this, R.layout.list_item, itemsSections);
+
 			listView.setAdapter(adapter);
+		} else
+		{
+			adapter.notifyDataSetChanged();
+		}
+	}
+
+	private class ArrayFilter extends Filter
+	{
+		@Override
+		protected FilterResults performFiltering(CharSequence prefix)
+		{
+			FilterResults results = new FilterResults();
+
+			if (prefix == null || prefix.length() == 0)
+			{
+				ArrayList<VideoItem> list;
+
+				synchronized (mLock)
+				{
+					list = new ArrayList<>(items);
+				}
+
+				results.values = list;
+				results.count = list.size();
+			} else
+			{
+				String prefixString = prefix.toString().toLowerCase();
+
+				ArrayList<VideoItem> values;
+
+				synchronized (mLock)
+				{
+					values = new ArrayList<>(items);
+				}
+
+				final int count = values.size();
+				final ArrayList<VideoItem> newValues = new ArrayList<>();
+
+				for (int i = 0; i < count; i++)
+				{
+					final VideoItem value = values.get(i);
+					final String valueText = value.toString().toLowerCase();
+
+					// First match against the whole, non-splitted value
+					if (valueText.startsWith(prefixString))
+					{
+						newValues.add(value);
+					} else
+					{
+						final String[] words = valueText.split(" ");
+						final int wordCount = words.length;
+
+						// Start at index 0, in case valueText starts with space(s)
+						for (int k = 0; k < wordCount; k++)
+						{
+							if (words[k].startsWith(prefixString))
+							{
+								newValues.add(value);
+
+								break;
+							}
+						}
+					}
+				}
+
+				results.values = newValues;
+				results.count = newValues.size();
+			}
+
+			return results;
+		}
+
+		@Override
+		protected void publishResults(CharSequence constraint, FilterResults results)
+		{
+			setVideosAdapter((List<VideoItem>) results.values);
 		}
 	}
 }

@@ -96,6 +96,7 @@ public class RecentVideos extends ActionBarActivity
 			row.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 			row.setGravity(Gravity.CENTER);
 			row.setBaselineAligned(false);
+			row.setPadding(0, 0, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 3, context.getResources().getDisplayMetrics()), 0);
 
 			View v = new View(context);
 			v.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 15, context.getResources().getDisplayMetrics())));
@@ -120,7 +121,7 @@ public class RecentVideos extends ActionBarActivity
 					String imageUrl = "http://www.couchtuner.eu" + e.select("span").attr("style").replace("background-image: url(", "").replace(")", "");
 
 					String prettyPrintedBodyFragment = Jsoup.clean(e.select("a").html(), "", Whitelist.none().addTags("br"),new Document.OutputSettings().prettyPrint(true));
-					String videoTitle = Jsoup.clean(prettyPrintedBodyFragment, "", Whitelist.none(), new Document.OutputSettings().prettyPrint(false)).replace("0 comments", "");
+					String videoTitle = Jsoup.clean(prettyPrintedBodyFragment, "", Whitelist.none(), new Document.OutputSettings().prettyPrint(false)).replace("0 comments", "").replace("&amp;", "&");
 
 					videos.put(videoId, new Object[] { videoTitle, e.select("a").attr("href") });
 					//videos.add(new Object[] {imageUrl, videoTitle.replace("0 comments", "")});
@@ -177,6 +178,7 @@ public class RecentVideos extends ActionBarActivity
 				row.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 				row.setGravity(Gravity.CENTER_HORIZONTAL);
 				row.setBaselineAligned(false);
+				row.setPadding(0, 0, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 3, context.getResources().getDisplayMetrics()), 0);
 
 				View v = new View(context);
 				v.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, context.getResources().getDisplayMetrics())));

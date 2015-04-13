@@ -21,7 +21,8 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/searchVideos"
                 android:hint="Search Videos"
-                android:singleLine="true"/>
+                android:singleLine="true"
+                android:imeOptions="actionSearch"/>
         </LinearLayout>
 
         <ListView

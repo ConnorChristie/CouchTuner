@@ -1,11 +1,11 @@
-package me.connor.couchtuner;
+package me.connor.couchtuner.episodeitems;
 
-public class Video
+public class EpisodeItem
 {
 	private String title;
 	private String link;
 
-	public Video(String title, String link)
+	public EpisodeItem(String title, String link)
 	{
 		this.title = title;
 		this.link = link;
@@ -19,10 +19,5 @@ public class Video
 	public String getLink()
 	{
 		return link;
-	}
-
-	public String toString()
-	{
-		return title;
 	}
 }
