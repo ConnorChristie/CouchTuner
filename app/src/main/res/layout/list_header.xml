@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/list_header_title"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp"
+    android:paddingLeft="11dp"
+    style="?android:attr/listSeparatorTextViewStyle"
+    android:text="All Videos"
+    android:textColor="#ff707070"
+    android:background="#ffe1e1e1"
+    android:textSize="12sp"/>

@@ -2,13 +2,35 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                tools:context="me.connor.couchtuner.AllVideos">
+                tools:context="me.connor.couchtuner.AllVideos"
+                android:focusableInTouchMode="true">
 
-    <me.connor.couchtuner.videolibrary.PinnedSectionListView
-        android:id="@+id/allVideos"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fadingEdge="vertical"
-        android:fastScrollEnabled="true"
-        />
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp">
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/searchVideos"
+                android:hint="Search Videos"
+                android:singleLine="true"/>
+        </LinearLayout>
+
+        <ListView
+            android:id="@+id/allVideos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fadingEdge="vertical"
+            android:fastScrollEnabled="true"
+            />
+
+    </LinearLayout>
 </RelativeLayout>

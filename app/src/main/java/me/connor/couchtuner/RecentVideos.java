@@ -248,7 +248,7 @@ public class RecentVideos extends ActionBarActivity
 		}
 	}
 
-	protected static class DownloadImageTask extends AsyncTask<String, Void, Bitmap>
+	protected class DownloadImageTask extends AsyncTask<String, Void, Bitmap>
 	{
 		private ImageView imageView;
 
@@ -259,19 +259,20 @@ public class RecentVideos extends ActionBarActivity
 
 		protected Bitmap doInBackground(String... url)
 		{
-			Bitmap mIcon11 = null;
+			Bitmap icon = null;
 
 			try
 			{
 				InputStream in = new java.net.URL(url[0]).openStream();
-				mIcon11 = BitmapFactory.decodeStream(in);
+				icon = BitmapFactory.decodeStream(in);
 			} catch (Exception e)
 			{
-				Log.e("Error", e.getMessage());
 				e.printStackTrace();
+
+				icon = BitmapFactory.decodeResource(getResources(), R.mipmap.no_image_available);
 			}
 
-			return mIcon11;
+			return icon;
 		}
 
 		protected void onPostExecute(Bitmap result)
